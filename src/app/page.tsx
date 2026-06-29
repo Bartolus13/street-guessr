@@ -25,6 +25,8 @@ export default function Page() {
   const [streetName, setStreetName] = useState("Loading...");
   const [streetCoordinates, setStreetCoordinates] = useState<[number, number][]>([]);
   const [clickedCoordinates, setClickedCoordinates] = useState<[number, number] | null>(null);
+  const [distance, setDistance] = useState<number | null>(null);
+  const [guessSubmitted, setGuessSubmitted] = useState(false);
 
   useEffect(() => {
     fetch("/street_data/merged.geojson")
@@ -52,6 +54,9 @@ export default function Page() {
     const randomStreet = streets[Math.floor(Math.random() * streets.length)];
     setStreetName(randomStreet.name);
     setStreetCoordinates(randomStreet.coordinates);
+    setGuessSubmitted(false);
+    setClickedCoordinates([0, 0]);
+    setDistance(null);
   };
 
   function distanceToStreet(clickLat: number, clickLng: number, street: Street) {
@@ -61,30 +66,41 @@ export default function Page() {
       street.coordinates.map(([lat, lng]) => [lng, lat])
     );
 
-    return turf.pointToLineDistance(point, line, {
+    setDistance(turf.pointToLineDistance(point, line, {
       units: "meters",
-    });
+    }));
+    return 0;
 }
+
+  const submitGuess = () => {
+    if (!clickedCoordinates || clickedCoordinates[0] === 0 && clickedCoordinates[1] === 0) {
+      return;
+    }
+
+    const [lat, lng] = clickedCoordinates;
+    distanceToStreet(lat, lng, {
+      name: streetName,
+      coordinates: streetCoordinates,
+    });
+    setGuessSubmitted(true);
+  };
 
   return (
     <>
       <div className="h-full w-full z-0">
         <MapClient
-          coords={{ coordinates: streetCoordinates }}
+          coords={guessSubmitted ? { coordinates: streetCoordinates } : { coordinates: [[0, 0], [0, 0]] }}
+          markerPosition={clickedCoordinates}
           onMapClick={setClickedCoordinates}
+          guessSubmitted={guessSubmitted}
         />
       </div>
 
       <div className="absolute bottom-0 left-0 w-full bg-black/60 p-4 text-center text-white z-10">
         <h1 className="text-xl font-semibold">{streetName}</h1>
-        {clickedCoordinates ? (
+        {guessSubmitted && distance !== null ? (
           <p className="mt-2 text-sm">
-            Clicked: {clickedCoordinates[0].toFixed(4)}, {clickedCoordinates[1].toFixed(4)}
-          </p>
-        ) : null}
-        {clickedCoordinates ? (
-          <p className="mt-2 text-sm">
-            Distance: {distanceToStreet(clickedCoordinates[0], clickedCoordinates[1], { name: streetName, coordinates: streetCoordinates }).toFixed(2)} meters
+            Distance: {distance.toFixed(2)} meters
           </p>
         ) : null}
         <button
@@ -93,6 +109,15 @@ export default function Page() {
           className="mt-2 rounded bg-white px-4 py-2 text-black transition hover:bg-gray-200"
         >
           Pick random street
+        </button>
+        <div className=""></div>
+        <button
+          type="button"
+          onClick={submitGuess}
+          disabled={!clickedCoordinates}
+          className="mt-2 rounded bg-white px-4 py-2 text-black transition hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          Guess
         </button>
       </div>
     </>

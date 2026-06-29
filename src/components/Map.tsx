@@ -68,10 +68,14 @@ function MapClickHandler({ onMapClick }: { onMapClick: (latlng: LatLng) => void 
 
 export default function Map({
   streetCoordinates,
+  markerPosition,
   onMapClick,
+  guessSubmitted
 }: {
   streetCoordinates: [number, number][];
+  markerPosition?: [number, number] | null;
   onMapClick?: (coords: [number, number]) => void;
+  guessSubmitted?: boolean;
 }) {
   const defaultPosition: LatLngExpression = [52.2298, 21.0118]; // Coordinates for Warsaw
   
@@ -86,11 +90,15 @@ export default function Map({
     [52.4, 21.3]     // Northeast corner [maxLat, maxLng]
   ] as LatLngExpression[];
   
-  const [markerPosition, setMarkerPosition] = useState<LatLngExpression>(defaultPosition);
+  const [internalMarkerPosition, setInternalMarkerPosition] = useState<LatLngExpression | null>(null);
+  const currentMarkerPosition = markerPosition ?? internalMarkerPosition ?? [0, 0];
   
   // Handle click events - replace marker position with new location
   const handleMapClick = (latlng: LatLng) => {
-    setMarkerPosition([latlng.lat, latlng.lng]);
+    if (guessSubmitted) {
+      return; // Do not allow marker movement after guess submission
+    }
+    setInternalMarkerPosition([latlng.lat, latlng.lng]);
     onMapClick?.([latlng.lat, latlng.lng]);
   };
 
@@ -108,7 +116,7 @@ export default function Map({
       <MapClickHandler onMapClick={handleMapClick} />
       
       {/* Render the single marker */}
-      <Marker position={markerPosition}>
+      <Marker position={currentMarkerPosition}>
         <Popup>Marker</Popup>
       </Marker>
       <Polyline positions={streetCoordinates} />

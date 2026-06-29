@@ -8,9 +8,11 @@ const Map = dynamic(() => import("./Map"), {
 
 type MapClientProps = {
   coords: { coordinates: [number, number][] };
+  markerPosition?: [number, number] | null;
   onMapClick?: (coords: [number, number]) => void;
+  guessSubmitted?: boolean;
 };
 
-export default function MapClient({ coords, onMapClick }: MapClientProps) {
-  return <Map streetCoordinates={coords.coordinates} onMapClick={onMapClick} />;
+export default function MapClient({ coords, markerPosition, onMapClick, guessSubmitted }: MapClientProps) {
+  return <Map streetCoordinates={coords.coordinates} markerPosition={markerPosition} onMapClick={onMapClick} guessSubmitted={guessSubmitted} />;
 }
