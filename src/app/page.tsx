@@ -13,7 +13,7 @@ export default function Page() {
 
   type StreetData = {
     type: string;
-    properties: {name: string};
+    properties: {name: string, highway: string};
     geometry: {coordinates: [number, number][]};
   }
 
@@ -29,7 +29,7 @@ export default function Page() {
   const [guessSubmitted, setGuessSubmitted] = useState(false);
 
   useEffect(() => {
-    fetch("/street_data/merged.geojson")
+    fetch("/street_data/mokotow.geojson")
       .then((response) => response.json())
       .then((data: StreetFeature) => {
         

@@ -1,6 +1,6 @@
 const fs = require("fs");
 
-const INPUT_FILE = "./public/street_data/warsaw.geojson";
+const INPUT_FILE = "./public/street_data/mokotow.geojson";
 const OUTPUT_FILE = "./public/street_data/clean.geojson";
 
 function clean(data) {
@@ -45,7 +45,7 @@ function clean(data) {
 
     result.push({
       type: "Feature",
-      properties: { name },
+      properties: { name, highway },
       geometry: {
         type: "LineString",
         coordinates: coords,

@@ -109,7 +109,7 @@ export default function Map({
       style={{ height: "100vh", width: "100%", zIndex: 0 }}
     >
       <TileLayer
-        url="https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png"
+        url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png"
         attribution='© CartoDB'
       />
       <MapBoundsHandler mapBounds={mapBounds} minZoom={minZoom} maxZoom={maxZoom} />

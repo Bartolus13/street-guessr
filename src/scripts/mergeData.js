@@ -84,17 +84,26 @@ function run(data) {
 
   for (const f of data.features) {
     const name = f.properties?.name;
+    const highway = f.properties?.highway;
     const coords = f.geometry?.coordinates;
 
     if (!name || !coords?.length) continue;
 
-    if (!map.has(name)) map.set(name, []);
-    map.get(name).push(coords);
+    if (!map.has(name)) {
+      map.set(name, { segments: [], highway });
+    }
+
+    const entry = map.get(name);
+    if (highway && !entry.highway) {
+      entry.highway = highway;
+    }
+    entry.segments.push(coords);
   }
 
   const result = [];
 
-  for (const [name, segments] of map.entries()) {
+  for (const [name, entry] of map.entries()) {
+    const segments = entry.segments;
     if (segments.length === 0) continue;
 
     const merged = mergeStreet(segments);
@@ -103,7 +112,7 @@ function run(data) {
 
     result.push({
       type: "Feature",
-      properties: { name },
+      properties: { name, highway: entry.highway },
       geometry: {
         type: "LineString",
         coordinates: merged,
