@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, useMapEvents, Polyline } from "react-leaflet";
 import { LatLngExpression, LatLng } from "leaflet";
 import L from "leaflet";
 
@@ -66,7 +66,13 @@ function MapClickHandler({ onMapClick }: { onMapClick: (latlng: LatLng) => void 
   return null;
 }
 
-export default function Map() {
+export default function Map({
+  streetCoordinates,
+  onMapClick,
+}: {
+  streetCoordinates: [number, number][];
+  onMapClick?: (coords: [number, number]) => void;
+}) {
   const defaultPosition: LatLngExpression = [52.2298, 21.0118]; // Coordinates for Warsaw
   
   // === TWEAK THESE VARIABLES TO CONTROL MAP LIMITS ===
@@ -85,6 +91,7 @@ export default function Map() {
   // Handle click events - replace marker position with new location
   const handleMapClick = (latlng: LatLng) => {
     setMarkerPosition([latlng.lat, latlng.lng]);
+    onMapClick?.([latlng.lat, latlng.lng]);
   };
 
   return (
@@ -104,6 +111,7 @@ export default function Map() {
       <Marker position={markerPosition}>
         <Popup>Marker</Popup>
       </Marker>
+      <Polyline positions={streetCoordinates} />
     </MapContainer>
   );
 }
