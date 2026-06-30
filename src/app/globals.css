@@ -1,4 +1,7 @@
+
+@import url('https://fonts.googleapis.com/css2?family=Cherry+Bomb+One&display=swap');
 @import "tailwindcss";
+@source "../**/*.{ts,tsx,js,jsx}";
 
 :root {
   --background: #ffffff;
@@ -22,5 +25,8 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: "Cherry Bomb One", system-ui;
+  font-weight: 400;
+  font-style: normal;
+
 }
