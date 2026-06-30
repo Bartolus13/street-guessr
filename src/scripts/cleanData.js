@@ -1,6 +1,6 @@
 const fs = require("fs");
 
-const INPUT_FILE = "./public/street_data/mokotow.geojson";
+const INPUT_FILE = "./public/street_data/raw.geojson";
 const OUTPUT_FILE = "./public/street_data/clean.geojson";
 
 function clean(data) {

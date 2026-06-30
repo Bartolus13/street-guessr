@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import MapClient from "@/components/MapClient";
 import * as turf from "@turf/turf";
 
-export type Difficulty = "easy" | "medium" | "hard";
+export type Difficulty = "easy" | "medium" | "hard" | "all";
 export default function Page() {
 
   type Street = {
@@ -28,23 +28,44 @@ export default function Page() {
   const [clickedCoordinates, setClickedCoordinates] = useState<[number, number] | null>(null);
   const [distance, setDistance] = useState<number | null>(null);
   const [guessSubmitted, setGuessSubmitted] = useState(false);
-  const [difficulty, setDifficulty] = useState<Difficulty>("easy"); // "easy", "medium", "hard"
+  const [difficulty, setDifficulty] = useState<Difficulty>("hard");
 
   const difficultyHighways = {
-  easy: ["primary", "secondary"],
-  medium: ["primary", "secondary", "tertiary"],
+  easy: [
+    "motorway", 
+    "trunk", 
+    "primary", 
+    "secondary"
+  ],
+  medium: [
+    "motorway", 
+    "trunk", 
+    "primary", 
+    "secondary", 
+    "tertiary"
+  ],
   hard: [
+    "motorway", 
+    "trunk",
+    "primary",
+    "secondary",
+    "tertiary",
+    "residential",
+  ],
+  all: [
+    "motorway", 
+    "trunk",
     "primary",
     "secondary",
     "tertiary",
     "residential",
     "living_street",
     "unclassified",
-  ],
+  ],  
 };
 
   useEffect(() => {
-    fetch("/street_data/merged.geojson")
+    fetch("/street_data/mokotow.geojson")
       .then((response) => response.json())
       .then((data: StreetFeature) => {
         const allowed = difficultyHighways[difficulty];
@@ -63,6 +84,7 @@ export default function Page() {
   }, []);
 
     const pickRandomStreet = () => {
+      console.log("Streets available:", streets.length);
     if (streets.length === 0) {
       return;
     }
