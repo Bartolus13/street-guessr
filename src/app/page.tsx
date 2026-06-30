@@ -4,17 +4,18 @@ import { useEffect, useState } from "react";
 import MapClient from "@/components/MapClient";
 import * as turf from "@turf/turf";
 
+export type Difficulty = "easy" | "medium" | "hard";
 export default function Page() {
 
   type Street = {
     name: string;
-    coordinates: [number, number][];
+    coordinates: [number, number][][];
   }
 
   type StreetData = {
     type: string;
     properties: {name: string, highway: string};
-    geometry: {coordinates: [number, number][]};
+    geometry: {coordinates: [number, number][][]};
   }
 
   type StreetFeature = { 
@@ -23,17 +24,35 @@ export default function Page() {
 
   const [streets, setStreets] = useState<Street[]>([]);
   const [streetName, setStreetName] = useState("Loading...");
-  const [streetCoordinates, setStreetCoordinates] = useState<[number, number][]>([]);
+  const [streetCoordinates, setStreetCoordinates] = useState<[number, number][][]>([]);
   const [clickedCoordinates, setClickedCoordinates] = useState<[number, number] | null>(null);
   const [distance, setDistance] = useState<number | null>(null);
   const [guessSubmitted, setGuessSubmitted] = useState(false);
+  const [difficulty, setDifficulty] = useState<Difficulty>("easy"); // "easy", "medium", "hard"
+
+  const difficultyHighways = {
+  easy: ["primary", "secondary"],
+  medium: ["primary", "secondary", "tertiary"],
+  hard: [
+    "primary",
+    "secondary",
+    "tertiary",
+    "residential",
+    "living_street",
+    "unclassified",
+  ],
+};
 
   useEffect(() => {
-    fetch("/street_data/mokotow.geojson")
+    fetch("/street_data/merged.geojson")
       .then((response) => response.json())
       .then((data: StreetFeature) => {
+        const allowed = difficultyHighways[difficulty];
+        const filtered = data.features.filter((feature: StreetData) =>
+          allowed.includes(feature.properties.highway)
+        );
         
-        setStreets(data.features.map((feature: StreetData) => ({
+        setStreets(filtered.map((feature: StreetData) => ({
           name: feature.properties.name,
           coordinates: feature.geometry.coordinates
         })));
@@ -42,9 +61,6 @@ export default function Page() {
         console.error("Error fetching streets:", error);
       });
   }, []);
-
-
-
 
     const pickRandomStreet = () => {
     if (streets.length === 0) {
@@ -61,16 +77,26 @@ export default function Page() {
 
   function distanceToStreet(clickLat: number, clickLng: number, street: Street) {
     const point = turf.point([clickLng, clickLat]);
+    let minDistance: number | null = null;
 
-    const line = turf.lineString(
-      street.coordinates.map(([lat, lng]) => [lng, lat])
-    );
+    for (const segment of street.coordinates) {
+      const line = turf.lineString(
+        segment.map(([lat, lng]) => [lng, lat])
+      );
 
-    setDistance(turf.pointToLineDistance(point, line, {
-      units: "meters",
-    }));
-    return 0;
-}
+      const dist = turf.pointToLineDistance(point, line, {
+        units: "meters",
+      });
+      console.log(`Distance to street ${street.name}: ${dist} meters`);
+
+      if (minDistance === null || dist < minDistance) {
+        minDistance = dist;
+      }
+    }
+
+    setDistance(minDistance);
+    return minDistance;
+  }
 
   const submitGuess = () => {
     if (!clickedCoordinates || clickedCoordinates[0] === 0 && clickedCoordinates[1] === 0) {
@@ -89,7 +115,7 @@ export default function Page() {
     <>
       <div className="h-full w-full z-0">
         <MapClient
-          coords={guessSubmitted ? { coordinates: streetCoordinates } : { coordinates: [[0, 0], [0, 0]] }}
+          coords={guessSubmitted ? { coordinates: streetCoordinates } : { coordinates: [[[0, 0], [0, 0]]] }}
           markerPosition={clickedCoordinates}
           onMapClick={setClickedCoordinates}
           guessSubmitted={guessSubmitted}

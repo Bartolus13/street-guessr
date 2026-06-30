@@ -7,7 +7,7 @@ const Map = dynamic(() => import("./Map"), {
 });
 
 type MapClientProps = {
-  coords: { coordinates: [number, number][] };
+  coords: { coordinates: [number, number][][] };
   markerPosition?: [number, number] | null;
   onMapClick?: (coords: [number, number]) => void;
   guessSubmitted?: boolean;

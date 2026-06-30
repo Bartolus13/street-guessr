@@ -72,7 +72,7 @@ export default function Map({
   onMapClick,
   guessSubmitted
 }: {
-  streetCoordinates: [number, number][];
+  streetCoordinates: [number, number][][];
   markerPosition?: [number, number] | null;
   onMapClick?: (coords: [number, number]) => void;
   guessSubmitted?: boolean;
@@ -119,7 +119,13 @@ export default function Map({
       <Marker position={currentMarkerPosition}>
         <Popup>Marker</Popup>
       </Marker>
-      <Polyline positions={streetCoordinates} />
+      {streetCoordinates.map((segment, i) => (
+          <Polyline
+              key={i}
+              positions={segment}
+              color="red"
+          />
+      ))}
     </MapContainer>
   );
 }
