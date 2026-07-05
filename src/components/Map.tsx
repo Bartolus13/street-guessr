@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useRef } from "react";
-import { MapContainer, TileLayer, Marker, Popup, useMapEvents, Polyline } from "react-leaflet";
+import { useEffect, useState, useRef } from "react";
+import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents, Polyline } from "react-leaflet";
 import { LatLngExpression, LatLng } from "leaflet";
 import L from "leaflet";
 
@@ -66,6 +66,40 @@ function MapClickHandler({ onMapClick }: { onMapClick: (latlng: LatLng) => void 
   return null;
 }
 
+function MapViewController({
+  streetCoordinates,
+  markerPosition,
+  guessSubmitted,
+}: {
+  streetCoordinates: [number, number][][];
+  markerPosition: [number, number] | null;
+  guessSubmitted?: boolean;
+}) {
+  const map = useMap();
+
+  useEffect(() => {
+    if (!guessSubmitted || !markerPosition || streetCoordinates.length === 0) {
+      return;
+    }
+
+    const points = streetCoordinates.flatMap((segment) =>
+      segment.map(([lat, lng]) => [lat, lng] as [number, number])
+    );
+
+    points.push(markerPosition);
+
+    const bounds = L.latLngBounds(points.map(([lat, lng]) => [lat, lng] as LatLngExpression));
+
+    map.fitBounds(bounds, {
+      padding: [24, 24],
+      paddingBottomRight: [0, 220],
+      duration: 1.2,
+    });
+  }, [streetCoordinates, markerPosition, guessSubmitted, map]);
+
+  return null;
+}
+
 export default function Map({
   streetCoordinates,
   markerPosition,
@@ -114,6 +148,11 @@ export default function Map({
       />
       <MapBoundsHandler mapBounds={mapBounds} minZoom={minZoom} maxZoom={maxZoom} />
       <MapClickHandler onMapClick={handleMapClick} />
+      <MapViewController
+        streetCoordinates={streetCoordinates}
+        markerPosition={markerPosition ?? null}
+        guessSubmitted={guessSubmitted}
+      />
       
       {/* Render the single marker */}
       <Marker position={currentMarkerPosition}>

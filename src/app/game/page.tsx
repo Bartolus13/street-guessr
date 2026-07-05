@@ -1,11 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import MapClient from "@/components/MapClient";
 import * as turf from "@turf/turf";
 
 export type Difficulty = "easy" | "medium" | "hard" | "all";
 export default function Game() {
+
+  const searchParams = useSearchParams();
+  const area = searchParams.get("area") ?? "warsaw";
 
   type Street = {
     name: string;
@@ -28,7 +32,11 @@ export default function Game() {
   const [clickedCoordinates, setClickedCoordinates] = useState<[number, number] | null>(null);
   const [distance, setDistance] = useState<number | null>(null);
   const [guessSubmitted, setGuessSubmitted] = useState(false);
-  const [difficulty, setDifficulty] = useState<Difficulty>("hard");
+  const [difficulty, setDifficulty] = useState<Difficulty>("medium");
+  const [score, setScore] = useState(0);
+  const [totalScore, setTotalScore] = useState(0);
+  const [roundNumber, setRoundNumber] = useState(1);
+
 
   const difficultyHighways = {
   easy: [
@@ -65,7 +73,7 @@ export default function Game() {
 };
 
   useEffect(() => {
-    fetch("/street_data/mokotow.geojson")
+    fetch(`/street_data/${area}.geojson`)
       .then((response) => response.json())
       .then((data: StreetFeature) => {
         const allowed = difficultyHighways[difficulty];
@@ -112,11 +120,22 @@ export default function Game() {
       console.log(`Distance to street ${street.name}: ${dist} meters`);
 
       if (minDistance === null || dist < minDistance) {
-        minDistance = dist;
+        minDistance = Math.round(dist);
       }
     }
 
     setDistance(minDistance);
+    if (minDistance !== null && 5005 - minDistance > 0) {
+      if (minDistance < 3) {
+        setScore(5000);
+        setTotalScore((prevTotal) => prevTotal + 5000);
+      } else {
+        setScore((5005 - minDistance));
+        setTotalScore((prevTotal) => prevTotal + (5005 - minDistance));
+      }
+    } else {
+      setScore(0);
+    }
     return minDistance;
   }
 
@@ -131,6 +150,7 @@ export default function Game() {
       coordinates: streetCoordinates,
     });
     setGuessSubmitted(true);
+    setRoundNumber((prevRound) => prevRound + 1);
   };
 
   return (
@@ -144,21 +164,16 @@ export default function Game() {
         />
       </div>
 
-      <div className="absolute bottom-0 left-0 w-full bg-indigo-950 p-4 text-center text-white z-10">
-        <h1 className="text-xl">{streetName}</h1>
-        {guessSubmitted && distance !== null ? (
-          <p className="mt-2 text-sm">
-            Distance: {distance.toFixed(2)} meters
-          </p>
-        ) : null}
-        <button
+      <div className="absolute grid grid-cols-3 bottom-0 left-0 w-full bg-indigo-950 p-4 text-center text-white z-10">
+        <h1 className="text-4xl col-span-3 mb-5">{streetName}</h1>
+        <div className="flex flex-col justify-center gap-4">
+          <button
           type="button"
           onClick={pickRandomStreet}
           className="mt-2 rounded bg-white px-4 py-2 text-black transition hover:bg-gray-200"
         >
           Pick random street
         </button>
-        <div className=""></div>
         <button
           type="button"
           onClick={submitGuess}
@@ -167,6 +182,23 @@ export default function Game() {
         >
           Guess
         </button>
+        </div>
+        <div className="flex flex-col justify-center gap-4">
+          {guessSubmitted && distance !== null ? (
+          <><p className="mt-2 text-lg">
+            {distance.toFixed(0)} meters away
+          </p>
+          <p className="mt-2 text-2xl font-bold">Score: {score}</p></>
+        ) : null}
+        
+        </div>
+        <div className="flex flex-col justify-center gap-4">
+        <p className="mt-2 text-lg font-bold">Total Score: {totalScore}</p>
+        <p className="mt-2 text-lg font-bold">Round: {roundNumber} / 5</p>
+        </div>
+        
+        
+        
       </div>
     </>
   );
