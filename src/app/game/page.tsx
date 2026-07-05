@@ -10,6 +10,7 @@ export default function Game() {
 
   const searchParams = useSearchParams();
   const area = searchParams.get("area") ?? "warsaw";
+  const [difficulty, setDifficulty] = useState<Difficulty>(searchParams.get("difficulty") as Difficulty ?? "medium");
 
   type Street = {
     name: string;
@@ -32,7 +33,6 @@ export default function Game() {
   const [clickedCoordinates, setClickedCoordinates] = useState<[number, number] | null>(null);
   const [distance, setDistance] = useState<number | null>(null);
   const [guessSubmitted, setGuessSubmitted] = useState(false);
-  const [difficulty, setDifficulty] = useState<Difficulty>("medium");
   const [score, setScore] = useState(0);
   const [totalScore, setTotalScore] = useState(0);
   const [roundNumber, setRoundNumber] = useState(1);
@@ -126,7 +126,7 @@ export default function Game() {
 
     setDistance(minDistance);
     if (minDistance !== null && 5005 - minDistance > 0) {
-      if (minDistance < 3) {
+      if (minDistance < 5) {
         setScore(5000);
         setTotalScore((prevTotal) => prevTotal + 5000);
       } else {
@@ -152,6 +152,18 @@ export default function Game() {
     setGuessSubmitted(true);
     setRoundNumber((prevRound) => prevRound + 1);
   };
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.code === "Space" && !event.repeat) {
+        event.preventDefault();
+        submitGuess();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [submitGuess]);
 
   return (
     <>
